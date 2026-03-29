@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Droplets, Wind, Gauge, Eye, Sunrise, Sunset, Thermometer } from 'lucide-react';
+import { Droplets, Wind, Gauge, Sunrise, Sunset, Thermometer } from 'lucide-react';
 import type { WeatherData, TemperatureUnit } from '@/types/weather';
 import { getWeatherInfo, formatTemp, formatTime } from '@/lib/weather-utils';
 
