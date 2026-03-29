@@ -191,6 +191,7 @@ export default function Index() {
                 exit={{ opacity: 0 }}
                 className="space-y-6"
               >
+                <WeatherAlerts data={weather} unit={unit} />
                 <CurrentWeather data={weather} unit={unit} />
                 <HourlyForecast data={weather.hourly} unit={unit} />
                 <TemperatureChart data={weather.hourly} unit={unit} />
