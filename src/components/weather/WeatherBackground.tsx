@@ -8,8 +8,10 @@ interface WeatherBackgroundProps {
 }
 
 export default function WeatherBackground({ theme, children }: WeatherBackgroundProps) {
+  const isDark = document.documentElement.classList.contains('dark');
+
   const gradient = useMemo(() => {
-    const gradients: Record<WeatherTheme, string> = {
+    const light: Record<WeatherTheme, string> = {
       sunny: 'linear-gradient(135deg, #f59e0b, #ea580c, #dc2626)',
       cloudy: 'linear-gradient(135deg, #64748b, #94a3b8, #cbd5e1)',
       rainy: 'linear-gradient(135deg, #1e3a5f, #2563eb, #3b82f6)',
@@ -18,8 +20,17 @@ export default function WeatherBackground({ theme, children }: WeatherBackground
       stormy: 'linear-gradient(135deg, #1f2937, #374151, #1e293b)',
       default: 'linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6)',
     };
-    return gradients[theme];
-  }, [theme]);
+    const dark: Record<WeatherTheme, string> = {
+      sunny: 'linear-gradient(135deg, #78350f, #7c2d12, #450a0a)',
+      cloudy: 'linear-gradient(135deg, #1e293b, #334155, #475569)',
+      rainy: 'linear-gradient(135deg, #0c1929, #1e3a5f, #1e40af)',
+      snowy: 'linear-gradient(135deg, #334155, #475569, #64748b)',
+      night: 'linear-gradient(135deg, #020617, #0f0a2e, #1a1650)',
+      stormy: 'linear-gradient(135deg, #111827, #1f2937, #0f172a)',
+      default: 'linear-gradient(135deg, #1e3a8a, #312e81, #4c1d95)',
+    };
+    return isDark ? dark[theme] : light[theme];
+  }, [theme, isDark]);
 
   const isRainy = theme === 'rainy' || theme === 'stormy';
   const isSnowy = theme === 'snowy';
