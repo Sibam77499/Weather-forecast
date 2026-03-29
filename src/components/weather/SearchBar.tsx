@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Search, MapPin, X, Star, Clock } from 'lucide-react';
+import { Search, MapPin, X, Star, Clock, Mic, MicOff } from 'lucide-react';
 import { searchCities } from '@/lib/weather-api';
 import type { GeoLocation, FavoriteCity } from '@/types/weather';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,9 @@ export default function SearchBar({ onSelectCity, recentSearches, favorites, onT
   const [results, setResults] = useState<GeoLocation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const recognitionRef = useRef<any>(null);
 
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
@@ -28,6 +30,7 @@ export default function SearchBar({ onSelectCity, recentSearches, favorites, onT
       try {
         const cities = await searchCities(value);
         setResults(cities);
+        setIsOpen(true);
       } catch { setResults([]); }
       setLoading(false);
     }, 300);
@@ -39,6 +42,37 @@ export default function SearchBar({ onSelectCity, recentSearches, favorites, onT
     setResults([]);
     setIsOpen(false);
   };
+
+  const handleVoiceSearch = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in your browser.');
+      return;
+    }
+
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setListening(true);
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      handleSearch(transcript);
+    };
+
+    recognition.start();
+  }, [listening, handleSearch]);
 
   const isFavorite = (city: { name: string; latitude: number; longitude: number }) =>
     favorites.some(f => f.latitude === city.latitude && f.longitude === city.longitude);
@@ -61,6 +95,17 @@ export default function SearchBar({ onSelectCity, recentSearches, favorites, onT
           </button>
         )}
         <button
+          onClick={handleVoiceSearch}
+          className={`p-1.5 rounded-lg transition-colors ${listening ? 'bg-red-500/30' : 'hover:bg-white/10'}`}
+          title={listening ? 'Stop listening' : 'Voice search'}
+        >
+          {listening ? (
+            <MicOff className="w-5 h-5 weather-text animate-pulse" />
+          ) : (
+            <Mic className="w-5 h-5 weather-text" />
+          )}
+        </button>
+        <button
           onClick={onGetLocation}
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           title="Use my location"
@@ -81,7 +126,7 @@ export default function SearchBar({ onSelectCity, recentSearches, favorites, onT
               <div className="px-4 py-3 weather-text-muted text-sm">Searching...</div>
             )}
 
-            {results.length > 0 && results.map((city, i) => (
+            {results.length > 0 && results.map((city) => (
               <div
                 key={`${city.latitude}-${city.longitude}`}
                 className="flex items-center justify-between px-4 py-3 hover:bg-white/10 cursor-pointer transition-colors"
