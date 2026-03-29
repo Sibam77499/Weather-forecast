@@ -1,24 +1,14 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix default marker icon
-const icon = L.icon({
+const markerIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
-
-function MapUpdater({ lat, lon }: { lat: number; lon: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([lat, lon], 10, { animate: true });
-  }, [lat, lon, map]);
-  return null;
-}
 
 interface WeatherMapProps {
   latitude: number;
@@ -27,21 +17,51 @@ interface WeatherMapProps {
 }
 
 export default function WeatherMap({ latitude, longitude, cityName }: WeatherMapProps) {
+  const mapElementRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    if (!mapElementRef.current || mapInstanceRef.current) return;
+
+    const map = L.map(mapElementRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    markerRef.current = L.marker([latitude, longitude], { icon: markerIcon })
+      .addTo(map)
+      .bindPopup(cityName);
+
+    map.setView([latitude, longitude], 10);
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+      markerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    map.setView([latitude, longitude], map.getZoom(), { animate: true });
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([latitude, longitude]);
+      markerRef.current.setPopupContent(cityName);
+    }
+  }, [latitude, longitude, cityName]);
+
   return (
     <div>
       <h3 className="weather-text font-semibold text-lg mb-3">Location</h3>
-      <div className="glass-card overflow-hidden rounded-2xl" style={{ height: 220 }}>
-        <MapContainer
-          center={[latitude, longitude]}
-          zoom={10}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-          attributionControl={false}
-        >
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-          <Marker position={[latitude, longitude]} icon={icon} />
-          <MapUpdater lat={latitude} lon={longitude} />
-        </MapContainer>
+      <div className="glass-card overflow-hidden rounded-2xl h-[220px]">
+        <div ref={mapElementRef} className="h-full w-full" aria-label={`Map showing ${cityName}`} />
       </div>
     </div>
   );
