@@ -13,6 +13,7 @@ import WeatherBackground from '@/components/weather/WeatherBackground';
 import WeatherMap from '@/components/weather/WeatherMap';
 import AirQuality from '@/components/weather/AirQuality';
 import TemperatureChart from '@/components/weather/TemperatureChart';
+import WeatherAlerts from '@/components/weather/WeatherAlerts';
 
 function useLocalStorage<T>(key: string, initial: T): [T, (v: T | ((prev: T) => T)) => void] {
   const [value, setValue] = useState<T>(() => {
