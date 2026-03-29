@@ -23,4 +23,4 @@ A real-time weather application that fetches live weather data using OpenWeather
 3. Start exploring weather 🌤️
 
 ## 🌐 Live Demo
-👉 https://weather-forecast-two-liard.vercel.app
+👉 https://weatherfore-cast.vercel.app/
